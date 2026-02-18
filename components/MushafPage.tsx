@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { getPage, MushafLine, MushafWord } from '@/services/quranData';
+import { useQuranStore } from '@/stores/quranStore';
 
 interface MushafPageProps {
   pageNumber: number;
@@ -18,22 +19,60 @@ function hasAyahEndMarker(word: string): boolean {
     /\s[٠-٩١٢٣٤٥٦٧٨٩]+$/.test(word);
 }
 
-function renderTextLine(line: MushafLine, lineIndex: number) {
+function parseLocation(location: string) {
+  const parts = location.split(':');
+  return { surah: parseInt(parts[0]), ayah: parseInt(parts[1]), wordIndex: parseInt(parts[2]) };
+}
+
+function renderTextLine(
+  line: MushafLine,
+  lineIndex: number,
+  activeAyah: { surah: number; ayah: number } | null,
+  setActiveAyah: (surah: number, ayah: number) => void,
+) {
   if (!line.words) return null;
 
   return (
     <View key={lineIndex} style={styles.textLine}>
-      {line.words.map((word: MushafWord, wordIndex: number) => (
-        <Text
-          key={`${word.location}-${wordIndex}`}
-          style={[
-            styles.word,
-            hasAyahEndMarker(word.word) && styles.ayahEndWord,
-          ]}
-        >
-          {word.word}
-        </Text>
-      ))}
+      {line.words.map((word: MushafWord, wordIndex: number) => {
+        const loc = parseLocation(word.location);
+        const isFirstWord = loc.wordIndex === 1;
+        const isActive = activeAyah !== null &&
+          activeAyah.surah === loc.surah &&
+          activeAyah.ayah === loc.ayah;
+
+        if (isFirstWord) {
+          return (
+            <Pressable
+              key={`${word.location}-${wordIndex}`}
+              onPress={() => setActiveAyah(loc.surah, loc.ayah)}
+              style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+            >
+              <Text
+                style={[
+                  styles.word,
+                  isActive && styles.activeWord,
+                  hasAyahEndMarker(word.word) && styles.ayahEndWord,
+                ]}
+              >
+                {word.word}
+              </Text>
+            </Pressable>
+          );
+        }
+
+        return (
+          <Text
+            key={`${word.location}-${wordIndex}`}
+            style={[
+              styles.word,
+              hasAyahEndMarker(word.word) && styles.ayahEndWord,
+            ]}
+          >
+            {word.word}
+          </Text>
+        );
+      })}
     </View>
   );
 }
@@ -56,6 +95,8 @@ function renderBasmala(line: MushafLine, lineIndex: number) {
 
 export default function MushafPage({ pageNumber }: MushafPageProps) {
   const page = getPage(pageNumber);
+  const activeAyah = useQuranStore((s) => s.activeAyah);
+  const setActiveAyah = useQuranStore((s) => s.setActiveAyah);
 
   return (
     <View style={styles.container}>
@@ -67,7 +108,7 @@ export default function MushafPage({ pageNumber }: MushafPageProps) {
             case 'basmala':
               return renderBasmala(line, index);
             case 'text':
-              return renderTextLine(line, index);
+              return renderTextLine(line, index, activeAyah, setActiveAyah);
             default:
               return null;
           }
@@ -101,6 +142,9 @@ const styles = StyleSheet.create({
     color: '#E8E8E8',
     paddingHorizontal: 2,
     lineHeight: 40,
+  },
+  activeWord: {
+    color: '#8B0000',
   },
   ayahEndWord: {
     color: '#E8E8E8',
