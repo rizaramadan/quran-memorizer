@@ -27,7 +27,8 @@
     },
     "scheme": "quran-memorizer",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ]
   }
 }

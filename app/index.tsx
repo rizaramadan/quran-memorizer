@@ -5,6 +5,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Quran Memorizer</Text>
       <Text style={styles.subtitle}>Memorize the Quran with ease</Text>
+      <Text style={styles.arabic}>بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ</Text>
     </View>
   );
 }
@@ -25,5 +26,11 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     color: '#666',
+  },
+  arabic: {
+    fontFamily: 'UthmanicHafs',
+    fontSize: 32,
+    color: '#1a5c2e',
+    marginTop: 16,
   },
 });
