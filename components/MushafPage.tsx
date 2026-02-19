@@ -66,8 +66,7 @@ function renderTextLine(
             key={`${word.location}-${wordIndex}`}
             style={[
               styles.word,
-              isActive && styles.activeWord,
-              hasAyahEndMarker(word.word) && !isActive && styles.ayahEndWord,
+              hasAyahEndMarker(word.word) && styles.ayahEndWord,
             ]}
           >
             {word.word}
