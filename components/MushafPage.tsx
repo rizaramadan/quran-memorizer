@@ -52,7 +52,7 @@ function renderTextLine(
                 style={[
                   styles.word,
                   isActive && styles.activeWord,
-                  hasAyahEndMarker(word.word) && styles.ayahEndWord,
+                  hasAyahEndMarker(word.word) && !isActive && styles.ayahEndWord,
                 ]}
               >
                 {word.word}
@@ -66,7 +66,8 @@ function renderTextLine(
             key={`${word.location}-${wordIndex}`}
             style={[
               styles.word,
-              hasAyahEndMarker(word.word) && styles.ayahEndWord,
+              isActive && styles.activeWord,
+              hasAyahEndMarker(word.word) && !isActive && styles.ayahEndWord,
             ]}
           >
             {word.word}
@@ -93,7 +94,7 @@ function renderBasmala(line: MushafLine, lineIndex: number) {
   );
 }
 
-export default function MushafPage({ pageNumber }: MushafPageProps) {
+function MushafPage({ pageNumber }: MushafPageProps) {
   const page = getPage(pageNumber);
   const activeAyah = useQuranStore((s) => s.activeAyah);
   const setActiveAyah = useQuranStore((s) => s.setActiveAyah);
@@ -118,6 +119,8 @@ export default function MushafPage({ pageNumber }: MushafPageProps) {
     </View>
   );
 }
+
+export default React.memo(MushafPage);
 
 const styles = StyleSheet.create({
   container: {
