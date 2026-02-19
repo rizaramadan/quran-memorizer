@@ -8,6 +8,10 @@ interface QuranStore {
   activeAyah: { surah: number; ayah: number } | null;
   setActiveAyah: (surah: number, ayah: number) => void;
   clearActiveAyah: () => void;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+  bookmarks: string[]; // "surah:ayah" keys
+  toggleBookmark: (surah: number, ayah: number) => void;
 }
 
 export const useQuranStore = create<QuranStore>()(
@@ -18,6 +22,14 @@ export const useQuranStore = create<QuranStore>()(
       activeAyah: null,
       setActiveAyah: (surah, ayah) => set({ activeAyah: { surah, ayah } }),
       clearActiveAyah: () => set({ activeAyah: null }),
+      isDarkMode: false,
+      toggleDarkMode: () => set((s) => ({ isDarkMode: !s.isDarkMode })),
+      bookmarks: [],
+      toggleBookmark: (surah, ayah) => set((s) => {
+        const key = `${surah}:${ayah}`;
+        const has = s.bookmarks.includes(key);
+        return { bookmarks: has ? s.bookmarks.filter((b) => b !== key) : [...s.bookmarks, key] };
+      }),
     }),
     {
       name: 'quran-store',
