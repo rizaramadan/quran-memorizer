@@ -3,3 +3,25 @@
 .claude/
 ccpm/
 CLAUDE.md
+
+# Expo
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# macOS
+*.pem
+
+# Env
+.env*.local
+
+# Individual mushaf page JSON files (use combined quran-pages.json instead)
+assets/quran-data/page-*.json
