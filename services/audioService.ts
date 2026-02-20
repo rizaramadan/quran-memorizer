@@ -7,6 +7,7 @@ const CACHE_DIR = `${FileSystem.documentDirectory}audio/`;
 
 let sound: Audio.Sound | null = null;
 let currentKey: string | null = null;
+let audioQueue: Promise<void> = Promise.resolve();
 
 // Web: keep fetched blob URIs in memory
 const webCache = new Map<string, string>();
@@ -91,27 +92,48 @@ export function prefetchAyah(surah: number, ayah: number) {
   downloadAyah(surah, ayah).catch(() => {});
 }
 
+function runAudioOperation<T>(operation: () => Promise<T>): Promise<T> {
+  const next = audioQueue.then(operation, operation);
+  audioQueue = next.then(() => undefined, () => undefined);
+  return next;
+}
+
 export async function playAyah(surah: number, ayah: number) {
-  const stateKey = `${surah}:${ayah}`;
-  if (stateKey === currentKey && sound) {
-    await sound.playAsync();
-    return;
-  }
-  if (sound) {
-    await sound.unloadAsync();
-  }
-  const key = ayahKey(surah, ayah);
-  const uri = isWeb ? (webCache.get(key) || remoteUri(surah, ayah)) : localPath(surah, ayah);
-  const { sound: newSound } = await Audio.Sound.createAsync(
-    { uri },
-    { shouldPlay: true },
-  );
-  sound = newSound;
-  currentKey = stateKey;
+  return runAudioOperation(async () => {
+    const stateKey = `${surah}:${ayah}`;
+    if (stateKey === currentKey && sound) {
+      const status = await sound.getStatusAsync().catch(() => null);
+      if (status?.isLoaded) {
+        await sound.playAsync();
+        return;
+      }
+
+      // Sound reference is stale; reset and recreate.
+      sound = null;
+      currentKey = null;
+    }
+    if (sound) {
+      await sound.unloadAsync().catch(() => {});
+      sound = null;
+      currentKey = null;
+    }
+    const key = ayahKey(surah, ayah);
+    const uri = isWeb ? (webCache.get(key) || remoteUri(surah, ayah)) : localPath(surah, ayah);
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri },
+      { shouldPlay: true },
+    );
+    sound = newSound;
+    currentKey = stateKey;
+  });
 }
 
 export async function pauseAudio() {
-  if (sound) {
-    await sound.pauseAsync();
-  }
+  return runAudioOperation(async () => {
+    if (!sound) return;
+    const status = await sound.getStatusAsync().catch(() => null);
+    if (status?.isLoaded) {
+      await sound.pauseAsync();
+    }
+  });
 }
